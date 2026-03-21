@@ -17,7 +17,7 @@ class Solution:
         answer = []
 
         if not root:
-            return result
+            return answer
 
         queue = deque([root])
         print(queue)
