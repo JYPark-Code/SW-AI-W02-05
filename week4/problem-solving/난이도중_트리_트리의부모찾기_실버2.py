@@ -10,6 +10,7 @@
 첫째 줄부터 N-1개의 줄에 각 노드의 부모 노드 번호를 2번 노드부터 순서대로 출력한다.
 """
 import sys
+from collections import deque
 sys.setrecursionlimit(10**6)
 input = sys.stdin.readline
 
@@ -24,6 +25,8 @@ for _ in range(T-1):
     graph[a].append(b)
     graph[b].append(a)
 
+# DFS 풀이
+
 def dfs(node):
     for next_node in graph[node]:
         if parent[next_node] == 0:
@@ -32,4 +35,20 @@ def dfs(node):
 
 
 dfs(1)
+print(*parent[2:], sep="\n")
+
+# BFS 풀이
+def bfs(start):
+    queue = deque([start])
+    parent[start] = start  # 루트 방문 처리
+
+    while queue:
+        node = queue.popleft()
+
+        for next_node in graph[node]:
+            if parent[next_node] == 0:
+                parent[next_node] = node
+                queue.append(next_node)
+
+bfs(1)
 print(*parent[2:], sep="\n")
