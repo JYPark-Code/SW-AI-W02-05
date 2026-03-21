@@ -20,7 +20,7 @@ class Solution:
             return answer
 
         queue = deque([root])
-        print(queue)
+        # print(queue)
 
         while queue:
             current_level = []
