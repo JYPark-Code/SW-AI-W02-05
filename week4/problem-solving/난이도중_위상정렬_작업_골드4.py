@@ -48,11 +48,14 @@ for i in range(1, n + 1):
     for pre in required_jobs:
         graph[pre].append(i)
 
+    # 첫번째 0을 큐와 작업완료에 넣는다.
     if indegree[i] == 0:
         queue.append(i)
         finish[i] = time_list[i]
 
-# print(graph)
+# print("그래프 : ",graph)
+# print(finish)
+# print("진입차수 : ", indegree)
 
 while queue:
     x = queue.popleft()
@@ -61,7 +64,9 @@ while queue:
         if y is None:
             continue
         indegree[y] -= 1
+        # 뒤에 영향 주는 시간에 작업 시간을 미리 저장, 겹치는 작업은 늦게 끝나는 작업에 입혀져서 업데이트
         finish[y] = max(finish[y], finish[x] + time_list[y])
+        # print("작업 시간 : ",finish)
 
         if indegree[y] == 0:
             queue.append(y)
