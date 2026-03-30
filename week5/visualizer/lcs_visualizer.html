@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LCS Visualizer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Pretendard:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f2;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e0dfd8;
+    --border2: #cccbc2;
+    --text: #1a1a18;
+    --text2: #6b6a62;
+    --text3: #9b9a92;
+    --blue-bg: #ddeeff;
+    --blue-txt: #0a3d6b;
+    --blue-border: #a8c8f0;
+    --green-bg: #d8f0e0;
+    --green-txt: #0a4020;
+    --green-border: #8ecfa8;
+    --amber-bg: #fef3d0;
+    --amber-txt: #5a3a00;
+    --amber-border: #f5d07a;
+    --purple-bg: #ede8fc;
+    --purple-txt: #2d1b6e;
+    --purple-border: #c4b3f5;
+    --red-bg: #fde8e8;
+    --red-txt: #6b1010;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Pretendard', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 2.5rem 2rem;
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Input section */
+  .input-section {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .input-group label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .input-group input {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    width: 180px;
+    text-transform: uppercase;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .input-group input:focus { border-color: #6b8cf0; }
+
+  /* String display with char highlights */
+  .str-display {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .str-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-right: 4px;
+  }
+
+  .char-chip {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+  }
+
+  .char-chip.active-a {
+    background: var(--blue-bg);
+    color: var(--blue-txt);
+    border-color: var(--blue-border);
+    transform: scale(1.15);
+    font-weight: 600;
+  }
+
+  .char-chip.active-b {
+    background: var(--green-bg);
+    color: var(--green-txt);
+    border-color: var(--green-border);
+    transform: scale(1.15);
+    font-weight: 600;
+  }
+
+  .char-chip.match-a {
+    background: var(--green-bg);
+    color: var(--green-txt);
+    border-color: var(--green-border);
+    transform: scale(1.18);
+    font-weight: 600;
+  }
+
+  .char-chip.match-b {
+    background: var(--green-bg);
+    color: var(--green-txt);
+    border-color: var(--green-border);
+    transform: scale(1.18);
+    font-weight: 600;
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  button {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  button:hover { background: var(--surface2); border-color: #b0afa6; }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  #btnInit { background: #1a1a18; color: #f7f6f2; border-color: #1a1a18; }
+  #btnInit:hover { background: #333330; }
+
+  #btnAuto { min-width: 110px; }
+  #btnAuto.playing { background: var(--amber-bg); color: var(--amber-txt); border-color: var(--amber-border); }
+
+  .speed-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--text3);
+    font-family: var(--mono);
+    margin-left: auto;
+  }
+
+  input[type=range] {
+    width: 90px;
+    accent-color: #1a1a18;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .leg {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text2);
+    font-family: var(--mono);
+  }
+
+  .leg-box {
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  /* Info box */
+  .info-box {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text2);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    min-height: 42px;
+    line-height: 1.6;
+  }
+
+  .info-box b { color: var(--text); font-weight: 600; }
+
+  /* Table */
+  .tbl-wrap { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+
+  td, th {
+    width: 44px;
+    height: 44px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  th {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text2);
+    background: var(--surface2);
+  }
+
+  td {
+    color: var(--text);
+    transition: background 0.18s, color 0.18s;
+    font-weight: 400;
+  }
+
+  td.c-active  { background: var(--blue-bg);   color: var(--blue-txt);   font-weight: 600; }
+  td.c-match   { background: var(--green-bg);  color: var(--green-txt);  font-weight: 600; }
+  td.c-ref     { background: var(--amber-bg);  color: var(--amber-txt); }
+  td.c-done    { background: var(--purple-bg); color: var(--purple-txt); }
+  td.c-zero    { background: var(--surface2);  color: var(--text3); }
+
+  /* Result banner */
+  #resultBanner {
+    display: none;
+    padding: 12px 16px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    color: var(--green-txt);
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Step counter */
+  .step-counter {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--border);
+    border-radius: 999px;
+    height: 4px;
+    overflow: hidden;
+  }
+
+  #progressBar {
+    height: 100%;
+    background: #1a1a18;
+    border-radius: 999px;
+    width: 0%;
+    transition: width 0.2s;
+  }
+</style>
+</head>
+<body>
+
+<h1>LCS Visualizer</h1>
+<p class="subtitle">Longest Common Subsequence — DP table step-by-step</p>
+
+<div class="card">
+  <div class="input-section">
+    <div class="input-group">
+      <label>문자열 A</label>
+      <input id="strA" value="ABCBDAB" maxlength="10" spellcheck="false">
+    </div>
+    <div class="input-group">
+      <label>문자열 B</label>
+      <input id="strB" value="BDCAB" maxlength="10" spellcheck="false">
+    </div>
+    <button id="btnInit" style="margin-bottom:1px">초기화 ↺</button>
+  </div>
+</div>
+
+<!-- String displays -->
+<div class="card" id="strDisplayCard" style="display:none">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div class="str-display" id="displayA">
+      <span class="str-label">A</span>
+    </div>
+    <div class="str-display" id="displayB">
+      <span class="str-label">B</span>
+    </div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="card">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="btn-row">
+      <button id="btnBack">← 뒤로</button>
+      <button id="btnStep">앞으로 →</button>
+      <button id="btnAuto">▶ 자동 재생</button>
+      <button id="btnEnd">끝까지 →→</button>
+      <div class="speed-row">
+        속도 <input type="range" min="100" max="900" value="400" step="100" id="speed">
+        <span id="speedLabel">400ms</span>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="progress-wrap" style="flex:1">
+        <div id="progressBar"></div>
+      </div>
+      <span class="step-counter" id="stepCounter">0 / 0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Info -->
+<div class="card">
+  <div class="info-box" id="infoBox">초기화 버튼을 눌러 시작하세요.</div>
+</div>
+
+<!-- Legend -->
+<div class="card">
+  <div class="legend">
+    <div class="leg"><div class="leg-box" style="background:var(--blue-bg);border:1px solid var(--blue-border)"></div>현재 셀</div>
+    <div class="leg"><div class="leg-box" style="background:var(--green-bg);border:1px solid var(--green-border)"></div>문자 일치 (대각선+1)</div>
+    <div class="leg"><div class="leg-box" style="background:var(--amber-bg);border:1px solid var(--amber-border)"></div>max 참조</div>
+    <div class="leg"><div class="leg-box" style="background:var(--purple-bg);border:1px solid var(--purple-border)"></div>완료</div>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="tbl-wrap" id="tblWrap"></div>
+</div>
+
+<!-- Result -->
+<div id="resultBanner"></div>
+
+<script>
+(function () {
+  let A = '', B = '', L = [], Lsnap = [], steps = [], cur = 0, autoTimer = null;
+
+  const $ = id => document.getElementById(id);
+
+  /* ── helpers ── */
+  function getSpeed() { return parseInt($('speed').value); }
+  $('speed').addEventListener('input', function () { $('speedLabel').textContent = this.value + 'ms'; });
+
+  function updateProgress() {
+    const total = steps.length;
+    $('progressBar').style.width = total ? (cur / total * 100).toFixed(1) + '%' : '0%';
+    $('stepCounter').textContent = cur + ' / ' + total;
+  }
+
+  function updateCharHighlight(s) {
+    const chipsA = $('displayA').querySelectorAll('.char-chip');
+    const chipsB = $('displayB').querySelectorAll('.char-chip');
+    chipsA.forEach(c => c.className = 'char-chip');
+    chipsB.forEach(c => c.className = 'char-chip');
+    if (!s) return;
+    const ai = s.x - 1, bi = s.y - 1;
+    if (s.match) {
+      chipsA[ai].className = 'char-chip match-a';
+      chipsB[bi].className = 'char-chip match-b';
+    } else {
+      chipsA[ai].className = 'char-chip active-a';
+      chipsB[bi].className = 'char-chip active-b';
+    }
+  }
+
+  function buildCharDisplay() {
+    const dA = $('displayA'), dB = $('displayB');
+    // clear old chips
+    dA.querySelectorAll('.char-chip').forEach(e => e.remove());
+    dB.querySelectorAll('.char-chip').forEach(e => e.remove());
+    A.split('').forEach(ch => {
+      const d = document.createElement('div');
+      d.className = 'char-chip';
+      d.textContent = ch;
+      dA.appendChild(d);
+    });
+    B.split('').forEach(ch => {
+      const d = document.createElement('div');
+      d.className = 'char-chip';
+      d.textContent = ch;
+      dB.appendChild(d);
+    });
+    $('strDisplayCard').style.display = '';
+  }
+
+  /* ── render table ── */
+  function renderTable(activeIdx) {
+    const m = A.length, n = B.length;
+    const s = (activeIdx >= 0 && activeIdx < steps.length) ? steps[activeIdx] : null;
+
+    let html = '<table><tr><th></th><th style="opacity:.4;font-size:12px">ε</th>';
+    for (let j = 0; j < n; j++) html += '<th>' + B[j] + '</th>';
+    html += '</tr><tr><th style="opacity:.4;font-size:12px">ε</th>';
+    for (let j = 0; j <= n; j++) html += '<td class="c-zero">0</td>';
+    html += '</tr>';
+
+    for (let x = 1; x <= m; x++) {
+      html += '<tr><th>' + A[x - 1] + '</th>';
+      for (let y = 0; y <= n; y++) {
+        let cls = '';
+        if (y === 0) { cls = 'c-zero'; }
+        else if (s) {
+          if (x === s.x && y === s.y) {
+            cls = s.match ? 'c-match' : 'c-active';
+          } else if (s.match && x === s.x - 1 && y === s.y - 1 && x >= 1 && y >= 1) {
+            cls = 'c-ref';
+          } else if (!s.match && ((x === s.x - 1 && y === s.y) || (x === s.x && y === s.y - 1))) {
+            cls = 'c-ref';
+          } else {
+            const idx = (x - 1) * n + (y - 1);
+            if (idx < activeIdx) cls = 'c-done';
+          }
+        } else {
+          const idx = (x - 1) * n + (y - 1);
+          if (idx < cur) cls = 'c-done';
+        }
+        html += '<td class="' + cls + '">' + L[x][y] + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</table>';
+    $('tblWrap').innerHTML = html;
+  }
+
+  /* ── snapshot helpers for undo ── */
+  function saveSnap() {
+    Lsnap[cur] = L.map(row => row.slice());
+  }
+
+  function restoreSnap(idx) {
+    L = Lsnap[idx].map(row => row.slice());
+  }
+
+  /* ── init ── */
+  function init() {
+    stopAuto();
+    A = $('strA').value.toUpperCase().replace(/[^A-Z]/g, '');
+    B = $('strB').value.toUpperCase().replace(/[^A-Z]/g, '');
+    if (!A || !B) { $('infoBox').textContent = 'A, B를 입력하세요.'; return; }
+    const m = A.length, n = B.length;
+    L = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+    steps = [];
+    Lsnap = [];
+    for (let x = 1; x <= m; x++)
+      for (let y = 1; y <= n; y++)
+        steps.push({ x, y, match: A[x - 1] === B[y - 1] });
+    cur = 0;
+    saveSnap();
+    $('resultBanner').style.display = 'none';
+    buildCharDisplay();
+    renderTable(-1);
+    updateCharHighlight(null);
+    updateProgress();
+    $('infoBox').innerHTML = '준비 완료. 총 <b>' + steps.length + '</b> 스텝.';
+    $('btnBack').disabled = true;
+    $('btnStep').disabled = false;
+    $('btnEnd').disabled = false;
+  }
+
+  /* ── step forward ── */
+  function stepOnce() {
+    if (!A) { $('infoBox').textContent = '먼저 초기화를 눌러주세요.'; return; }
+    if (cur >= steps.length) { showResult(); return; }
+
+    const s = steps[cur];
+    renderTable(cur);
+    updateCharHighlight(s);
+
+    if (s.match) L[s.x][s.y] = L[s.x - 1][s.y - 1] + 1;
+    else L[s.x][s.y] = Math.max(L[s.x - 1][s.y], L[s.x][s.y - 1]);
+
+    cur++;
+    if (!Lsnap[cur]) saveSnap();
+
+    let msg = '';
+    if (s.match) {
+      msg = 'A[' + s.x + ']=<b>' + A[s.x - 1] + '</b> == B[' + s.y + ']=<b>' + B[s.y - 1] + '</b>'
+        + ' &nbsp;→&nbsp; L[' + s.x + '][' + s.y + '] = L[' + (s.x - 1) + '][' + (s.y - 1) + '] + 1 = <b>' + L[s.x][s.y] + '</b>';
+    } else {
+      msg = 'A[' + s.x + ']=<b>' + A[s.x - 1] + '</b> ≠ B[' + s.y + ']=<b>' + B[s.y - 1] + '</b>'
+        + ' &nbsp;→&nbsp; max(L[' + (s.x - 1) + '][' + s.y + '], L[' + s.x + '][' + (s.y - 1) + ']) = <b>' + L[s.x][s.y] + '</b>';
+    }
+    $('infoBox').innerHTML = msg;
+    $('btnBack').disabled = false;
+    updateProgress();
+
+    if (cur >= steps.length) {
+      setTimeout(function () { renderTable(-1); updateCharHighlight(null); showResult(); }, 300);
+    }
+  }
+
+  /* ── step back ── */
+  function stepBack() {
+    if (!A || cur <= 0) return;
+    stopAuto();
+    cur--;
+    restoreSnap(cur);
+    if (cur === 0) {
+      renderTable(-1);
+      updateCharHighlight(null);
+      $('infoBox').innerHTML = '준비 완료. 총 <b>' + steps.length + '</b> 스텝.';
+      $('btnBack').disabled = true;
+    } else {
+      const s = steps[cur - 1];
+      renderTable(cur - 1);
+      updateCharHighlight(s);
+      let msg = '';
+      if (s.match) {
+        msg = 'A[' + s.x + ']=<b>' + A[s.x - 1] + '</b> == B[' + s.y + ']=<b>' + B[s.y - 1] + '</b>'
+          + ' &nbsp;→&nbsp; L[' + s.x + '][' + s.y + '] = L[' + (s.x - 1) + '][' + (s.y - 1) + '] + 1 = <b>' + L[s.x][s.y] + '</b>';
+      } else {
+        msg = 'A[' + s.x + ']=<b>' + A[s.x - 1] + '</b> ≠ B[' + s.y + ']=<b>' + B[s.y - 1] + '</b>'
+          + ' &nbsp;→&nbsp; max(L[' + (s.x - 1) + '][' + s.y + '], L[' + s.x + '][' + (s.y - 1) + ']) = <b>' + L[s.x][s.y] + '</b>';
+      }
+      $('infoBox').innerHTML = msg;
+    }
+    $('resultBanner').style.display = 'none';
+    $('btnStep').disabled = false;
+    updateProgress();
+  }
+
+  /* ── skip to end ── */
+  function skipEnd() {
+    stopAuto();
+    if (!A) return;
+    while (cur < steps.length) {
+      const s = steps[cur];
+      if (s.match) L[s.x][s.y] = L[s.x - 1][s.y - 1] + 1;
+      else L[s.x][s.y] = Math.max(L[s.x - 1][s.y], L[s.x][s.y - 1]);
+      cur++;
+      if (!Lsnap[cur]) saveSnap();
+    }
+    renderTable(-1);
+    updateCharHighlight(null);
+    showResult();
+    updateProgress();
+  }
+
+  /* ── auto play ── */
+  function stopAuto() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    const btn = $('btnAuto');
+    btn.textContent = '▶ 자동 재생';
+    btn.classList.remove('playing');
+  }
+
+  function toggleAuto() {
+    if (!A) { $('infoBox').textContent = '먼저 초기화를 눌러주세요.'; return; }
+    if (autoTimer) { stopAuto(); return; }
+    $('btnAuto').textContent = '⏸ 일시정지';
+    $('btnAuto').classList.add('playing');
+    autoTimer = setInterval(function () {
+      if (cur >= steps.length) { stopAuto(); return; }
+      stepOnce();
+    }, getSpeed());
+  }
+
+  /* ── result ── */
+  function showResult() {
+    const m = A.length, n = B.length, lcs = L[m][n];
+    const banner = $('resultBanner');
+    banner.style.display = 'block';
+    banner.textContent = '✓  LCS 길이: ' + lcs + '   (A = "' + A + '",  B = "' + B + '")';
+    $('infoBox').innerHTML = '완료! LCS 길이 = <b>' + lcs + '</b>';
+    $('btnStep').disabled = true;
+    $('btnBack').disabled = false;
+    updateProgress();
+  }
+
+  /* ── bind buttons ── */
+  $('btnInit').addEventListener('click', init);
+  $('btnBack').addEventListener('click', stepBack);
+  $('btnStep').addEventListener('click', stepOnce);
+  $('btnAuto').addEventListener('click', toggleAuto);
+  $('btnEnd').addEventListener('click', skipEnd);
+
+  init();
+})();
+</script>
+</body>
+</html>
